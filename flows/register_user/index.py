@@ -15,7 +15,7 @@ def handler(event, context):
     provider   = "Google" if "Google" in identities else "Cognito"
 
     item = {
-        "PK":             f"user#{user_id}",
+        "PK":             f"User#{user_id}",
         "SK":             "Metadata",
         "user_id":        user_id,
         "username":       event["userName"],

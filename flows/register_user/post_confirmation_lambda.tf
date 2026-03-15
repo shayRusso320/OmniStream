@@ -78,4 +78,6 @@ resource "aws_lambda_function" "post_confirmation" {
   }
 
   tags = merge(var.tags, { Name = "cognito-post-confirmation" })
+
+  depends_on = [data.archive_file.lambda_zip]
 }
