@@ -19,94 +19,10 @@
 
 
 ###############################################################################
-# IAM Role for Post Confirmation Lambda
+# Data Sources
 ###############################################################################
 
-data "aws_iam_policy_document" "lambda_assume_role" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "post_confirmation_lambda" {
-  name               = "post-confirmation-lambda-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-  tags               = var.tags
-}
-
-# Basic execution — allows writing CloudWatch logs.
-resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  role       = aws_iam_role.post_confirmation_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-# Allow Lambda to write items into the DynamoDB table.
-data "aws_iam_policy_document" "lambda_dynamodb" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "dynamodb:PutItem",
-      "dynamodb:UpdateItem",
-    ]
-    resources = [
-      aws_dynamodb_table.main.arn,
-      "${aws_dynamodb_table.main.arn}/index/*", # Allow writes to GSI if needed
-    ]
-  }
-}
-
-resource "aws_iam_role_policy" "lambda_dynamodb" {
-  name   = "post-confirmation-dynamodb-policy"
-  role   = aws_iam_role.post_confirmation_lambda.id
-  policy = data.aws_iam_policy_document.lambda_dynamodb.json
-}
-
-###############################################################################
-# Post Confirmation Lambda
-###############################################################################
-
-# Package the Lambda from local handler
-data "archive_file" "lambda_zip" {
-  type        = "zip"
-  source_file = "${path.module}/lambdas/user_registration/index.py"
-  output_path = "${path.module}/lambdas/user_registration/lambda.zip"
-}
-
-resource "aws_lambda_function" "post_confirmation" {
-  function_name    = "cognito-post-confirmation"
-  role             = aws_iam_role.post_confirmation_lambda.arn
-  runtime          = "python3.12"
-  handler          = "index.handler"
-  filename         = data.archive_file.lambda_zip.output_path
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
-
-  # Free tier: 128 MB memory, up to 1M invocations/month free.
-  memory_size = 128
-  timeout     = 10
-
-  environment {
-    variables = {
-      DYNAMODB_TABLE = aws_dynamodb_table.main.name
-    }
-  }
-
-  tags = merge(var.tags, { Name = "cognito-post-confirmation" })
-}
-
-# Allow Cognito to invoke this Lambda.
-resource "aws_lambda_permission" "cognito_invoke" {
-  statement_id  = "AllowCognitoInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.post_confirmation.function_name
-  principal     = "cognito-idp.amazonaws.com"
-  source_arn    = aws_cognito_user_pool.main.arn
-}
+data "aws_region" "current" {}
 
 ###############################################################################
 # Cognito User Pool
@@ -201,7 +117,7 @@ resource "aws_cognito_user_pool" "main" {
 
   # Post confirmation trigger — fires after user verifies their email.
   lambda_config {
-    post_confirmation = aws_lambda_function.post_confirmation.arn
+    post_confirmation = var.lambda_post_confirmation_arn
   }
 
   tags = merge(var.tags, { Name = var.user_pool_name })
@@ -293,43 +209,4 @@ resource "aws_cognito_user_pool_client" "main" {
   prevent_user_existence_errors = "ENABLED"
 
   depends_on = [aws_cognito_identity_provider.google]
-}
-
-###############################################################################
-# Outputs
-###############################################################################
-
-output "user_pool_id" {
-  description = "ID of the Cognito User Pool."
-  value       = aws_cognito_user_pool.main.id
-}
-
-output "user_pool_arn" {
-  description = "ARN of the Cognito User Pool."
-  value       = aws_cognito_user_pool.main.arn
-}
-
-output "user_pool_endpoint" {
-  description = "Endpoint of the Cognito User Pool."
-  value       = aws_cognito_user_pool.main.endpoint
-}
-
-output "app_client_id" {
-  description = "ID of the Cognito App Client."
-  value       = aws_cognito_user_pool_client.main.id
-}
-
-output "hosted_ui_url" {
-  description = "Cognito Hosted UI login URL."
-  value       = "https://${var.cognito_domain}.auth.${var.aws_region}.amazoncognito.com/login?client_id=${aws_cognito_user_pool_client.main.id}&response_type=code&scope=openid+email+profile&redirect_uri=${var.callback_urls[0]}"
-}
-
-output "google_idp_redirect_uri" {
-  description = "Add this URI to your Google OAuth2 client's Authorized redirect URIs in Google Cloud Console."
-  value       = "https://${var.cognito_domain}.auth.${var.aws_region}.amazoncognito.com/oauth2/idpresponse"
-}
-
-output "post_confirmation_lambda_arn" {
-  description = "ARN of the post confirmation Lambda function."
-  value       = aws_lambda_function.post_confirmation.arn
 }

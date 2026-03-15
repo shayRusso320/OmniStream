@@ -1,10 +1,3 @@
-################### GENERAL VARIABLES ###################
-variable "aws_region" {
-  description = "AWS region to deploy into."
-  type        = string
-  default     = "eu-north-1"
-}
-
 variable "tags" {
   description = "Common tags applied to every resource."
   type        = map(string)
@@ -14,7 +7,6 @@ variable "tags" {
   }
 }
 
-################### DYNAMODB VARIABLES ###################
 variable "table_name" {
   description = "Name of the DynamoDB table."
   type        = string
@@ -54,45 +46,4 @@ variable "trigger_lambda_arn" {
   description = "ARN of the Lambda function that consumes the DynamoDB stream. Leave empty to skip creating the event-source mapping."
   type        = string
   default     = ""
-}
-
-################### COGNITO VARIABLES ###################
-variable "user_pool_name" {
-  description = "Name of the Cognito User Pool."
-  type        = string
-  default     = "OmniStreamUserPool"
-}
-
-variable "app_client_name" {
-  description = "Name of the Cognito User Pool App Client."
-  type        = string
-  default     = "OmniStreamAppClient"
-}
-
-variable "cognito_domain" {
-  description = "Domain prefix for the Cognito Hosted UI. Must be unique across all Cognito user pools in the region."
-  type        = string
-  default     = "omni-stream-auth"
-}
-
-variable "google_client_id" {
-  description = "Google OAuth2 client ID."
-  sensitive   = true
-}
-
-variable "google_client_secret" {
-  description = "Google OAuth2 client secret."
-  sensitive   = true
-}
-
-variable "callback_urls" {
-  description = "List of allowed callback URLs."
-  type        = list(string)
-  default     = ["http://localhost:3000/callback"]
-}
-
-variable "logout_urls" {
-  description = "List of allowed logout URLs."
-  type        = list(string)
-  default     = ["http://localhost:3000"]
 }

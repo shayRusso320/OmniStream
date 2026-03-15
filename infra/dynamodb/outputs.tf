@@ -1,19 +1,19 @@
 output "table_name" {
   description = "Name of the DynamoDB table."
-  value       = module.dynamodb.table_name
+  value       = aws_dynamodb_table.main.name
 }
 
 output "table_arn" {
   description = "ARN of the DynamoDB table."
-  value       = module.dynamodb.table_arn
+  value       = aws_dynamodb_table.main.arn
 }
 
 output "stream_arn" {
   description = "ARN of the DynamoDB stream (pass to var.lambda_arn when ready)."
-  value       = module.dynamodb.stream_arn
+  value       = aws_dynamodb_table.main.stream_arn
 }
 
 output "gsi_name" {
   description = "Name of the Global Secondary Index."
-  value       = module.dynamodb.gsi_name
+  value       = "GSI-SK-PK"
 }
