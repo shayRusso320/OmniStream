@@ -3,10 +3,10 @@
 ###############################################################################
 
 module "register_user" {
-  source                = "./flows/register_user"
-  tags                  = var.tags
-  table_name            = module.dynamodb.table_name
-  table_arn             = module.dynamodb.table_arn
+  source     = "./flows/register_user"
+  tags       = var.tags
+  table_name = module.dynamodb.table_name
+  table_arn  = module.dynamodb.table_arn
 }
 
 module "add_user_topics" {

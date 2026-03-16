@@ -34,14 +34,30 @@ module "cognito" {
   lambda_post_confirmation_name = module.register_user.post_confirmation_lambda_name
 }
 
+###############################################################################
+# Module: Gateway
+###############################################################################
+
+
 module "api_gateway" {
-    source = "./infra/gateway"
-    
-    tags                        = var.tags
-    api_name                    = "omnistream-api"
-    cognito_user_pool_id        = module.cognito.user_pool_id
-    cognito_user_pool_client_id = module.cognito.app_client_id
-    cors_allowed_origins        = ["*"] # Tighten to your domain in production.
-    cors_allowed_methods        = ["GET", "POST", "OPTIONS"]
-    cors_allowed_headers        = ["Authorization", "Content-Type"]
+  source = "./infra/gateway"
+
+  tags                        = var.tags
+  api_name                    = "omnistream-api"
+  cognito_user_pool_id        = module.cognito.user_pool_id
+  cognito_user_pool_client_id = module.cognito.app_client_id
+  cors_allowed_origins        = ["*"] # Tighten to your domain in production.
+  cors_allowed_methods        = ["GET", "POST", "OPTIONS"]
+  cors_allowed_headers        = ["Authorization", "Content-Type"]
+}
+
+###############################################################################
+# Module: Cloudfront + S3 for Web Hosting
+###############################################################################
+
+module "web_hosting" {
+  source = "./infra/web_hosting"
+
+  app_bucket_name = "omnistream-app-bucket-123456" # Must be globally unique.
+  tags            = var.tags
 }

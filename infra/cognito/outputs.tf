@@ -27,3 +27,8 @@ output "google_idp_redirect_uri" {
   description = "Add this URI to your Google OAuth2 client's Authorized redirect URIs in Google Cloud Console."
   value       = "https://${var.cognito_domain}.auth.${data.aws_region.current.name}.amazoncognito.com/oauth2/idpresponse"
 }
+
+output "cognito_domain" {
+  description = "Cognito domain prefix (used in Hosted UI URL and Google IdP redirect URI)."
+  value       = var.cognito_domain
+}
