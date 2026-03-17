@@ -59,7 +59,8 @@ module "web_hosting" {
   source = "./infra/web_hosting"
 
   app_bucket_name = "omnistream-app-bucket-123456" # Must be globally unique.
-  github_repo     = var.github_repo
-  github_org      = var.github_org
-  tags            = var.tags
+
+  github_repo = var.github_repo
+  github_org  = var.github_org
+  tags        = var.tags
 }

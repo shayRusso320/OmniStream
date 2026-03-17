@@ -1,6 +1,6 @@
 ############ Cognito Outputs ############
 
-output "hosted_ui_url" {
+output "cognito_hosted_ui_url" {
   description = "Cognito Hosted UI login URL."
   value       = "https://${module.cognito.cognito_domain}.auth.${var.aws_region}.amazoncognito.com/login?client_id=${module.cognito.app_client_id}&response_type=code&scope=openid+email+profile&redirect_uri=${var.callback_urls[0]}"
 }

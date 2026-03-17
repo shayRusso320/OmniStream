@@ -1,7 +1,7 @@
 resource "aws_lambda_permission" "apigw_invoke" {
   statement_id  = "AllowAPIGWInvokeAttachTopic"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.attach_topic.function_name
+  function_name = module.attach_topic_lambda.lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${var.api_gateway_execution_arn}/*"
 }
@@ -9,7 +9,7 @@ resource "aws_lambda_permission" "apigw_invoke" {
 resource "aws_apigatewayv2_integration" "attach_topic_to_user" {
   api_id                 = var.api_gateway_id
   integration_type       = "AWS_PROXY"
-  integration_uri        = aws_lambda_function.attach_topic.invoke_arn
+  integration_uri        = module.attach_topic_lambda.lambda_function_invoke_arn
   payload_format_version = "2.0"
 }
 
