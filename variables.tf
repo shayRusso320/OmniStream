@@ -56,3 +56,14 @@ variable "qdrant_api_key" {
   type        = string
   sensitive   = true
 }
+
+################### WEB HOSTING VARIABLES ###################
+variable "github_repo" {
+  description = "Github repo containing frontend, including github action for CD."
+  type        = string
+}
+
+variable "github_org" {
+  description = "GitHub repo in org/repo format, e.g. myorg/my-frontend."
+  type        = string
+}

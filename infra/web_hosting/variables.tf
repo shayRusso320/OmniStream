@@ -20,3 +20,13 @@ variable "cloudfront_default_root_object" {
   type        = string
   default     = "index.html"
 }
+
+variable "github_repo" {
+  description = "GitHub repo in org/repo format, e.g. myorg/my-frontend."
+  type        = string
+}
+
+variable "github_org" {
+  description = "GitHub repo in org/repo format, e.g. myorg/my-frontend."
+  type        = string
+}

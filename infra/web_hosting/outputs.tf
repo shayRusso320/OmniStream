@@ -12,3 +12,8 @@ output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID — needed to invalidate cache after deploy."
   value       = aws_cloudfront_distribution.app.id
 }
+
+output "deploy_role_arn" {
+  description = "Role ARN to set as AWS_DEPLOY_ROLE_ARN in GitHub Actions variables."
+  value       = aws_iam_role.github_actions_deploy.arn
+}
