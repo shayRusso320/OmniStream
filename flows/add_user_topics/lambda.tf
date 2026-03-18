@@ -44,9 +44,14 @@ module "attach_topic_lambda" {
   function_name = local.lambda_name
   handler       = "index.handler"
   runtime       = "python3.14"
-  source_path   = "${path.module}\\src" # folder with index.py + requirements.txt
-  memory_size   = 128
-  timeout       = 30
+
+  create_package          = false
+  ignore_source_code_hash = true
+
+  s3_existing_package = {
+    bucket = var.artifacts_bucket_name
+    key    = var.artifact_key
+  }
 
   environment_variables = {
     DYNAMODB_TABLE    = var.dynamodb_table_name

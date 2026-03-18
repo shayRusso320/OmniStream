@@ -1,13 +1,13 @@
 ###############################################################################
-# API Gateway — core configuration
+# API Gateway — core configuration using Terraform module
 #
-# This file owns only the gateway itself:
+# This module manages:
 #   - HTTP API
 #   - Cognito JWT authorizer
 #   - Default stage + CloudWatch logging
+#   - Routes and integrations
 #
-# Each route and its integration lives in its own flow module under flows/.
-# Flow modules receive api_id, execution_arn, and authorizer_id as inputs.
+# Lambda integrations are defined via lambda_integrations variable.
 ###############################################################################
 
 ###############################################################################
@@ -16,58 +16,29 @@
 
 data "aws_region" "current" {}
 
-###########################################################################
-# API Gateway
+###############################################################################
+# API Gateway Module
 ###############################################################################
 
-resource "aws_apigatewayv2_api" "main" {
+module "api_gateway" {
+  source  = "terraform-aws-modules/apigateway-v2/aws"
+  version = "~> 5.0"
+
   name          = var.api_name
   protocol_type = "HTTP"
+  create_domain_name = false
 
-  cors_configuration {
+  cors_configuration = {
     allow_origins = var.cors_allowed_origins
     allow_methods = var.cors_allowed_methods
     allow_headers = var.cors_allowed_headers
     max_age       = var.cors_max_age
   }
 
-  tags = merge(var.tags, { Name = var.api_name })
-}
-
-###############################################################################
-# Cognito JWT Authorizer
-###############################################################################
-
-resource "aws_apigatewayv2_authorizer" "cognito_jwt" {
-  api_id           = aws_apigatewayv2_api.main.id
-  authorizer_type  = "JWT"
-  identity_sources = ["$request.header.Authorization"]
-  name             = "cognito-jwt-authorizer"
-
-  jwt_configuration {
-    audience = [var.cognito_user_pool_client_id]
-    issuer   = "https://cognito-idp.${data.aws_region.current.name}.amazonaws.com/${var.cognito_user_pool_id}"
-  }
-}
-
-###############################################################################
-# Stage + Logging
-###############################################################################
-
-resource "aws_cloudwatch_log_group" "apigw" {
-  name              = "/aws/apigateway/${var.api_name}"
-  retention_in_days = 7
-
-  tags = var.tags
-}
-
-resource "aws_apigatewayv2_stage" "default" {
-  api_id      = aws_apigatewayv2_api.main.id
-  name        = "$default"
-  auto_deploy = true
-
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.apigw.arn
+  # Access logs
+  stage_access_log_settings = {
+    create_log_group            = true
+    log_group_retention_in_days = 7
     format = jsonencode({
       requestId        = "$context.requestId"
       sourceIp         = "$context.identity.sourceIp"
@@ -82,5 +53,45 @@ resource "aws_apigatewayv2_stage" "default" {
     })
   }
 
-  tags = merge(var.tags, { Name = "${var.api_name}-default-stage" })
+  # JWT Authorizer
+  authorizers = {
+    cognito_jwt = {
+      authorizer_type  = "JWT"
+      identity_sources = ["$request.header.Authorization"]
+      name             = "cognito-jwt-authorizer"
+
+      jwt_configuration = {
+        audience = [var.cognito_user_pool_client_id]
+        issuer   = "https://cognito-idp.${data.aws_region.current.name}.amazonaws.com/${var.cognito_user_pool_id}"
+      }
+    }
+  }
+
+  # Routes & Integration(s)
+  routes = {
+    for key, lambda in var.lambda_integrations : lambda.route_key => {
+      integration = {
+        type                   = "AWS_PROXY"
+        uri                    = lambda.invoke_arn
+        payload_format_version = "2.0"
+      }
+      authorizer_key = "cognito_jwt"
+    }
+  }
+
+  tags = merge(var.tags, { Name = var.api_name })
+}
+
+###############################################################################
+# Lambda Permissions for all integrations (required by AWS)
+###############################################################################
+
+resource "aws_lambda_permission" "apigw_invoke" {
+  for_each = var.lambda_integrations
+
+  statement_id  = "AllowAPIGWInvoke${replace(each.key, "-", "")}"
+  action        = "lambda:InvokeFunction"
+  function_name = each.value.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${module.api_gateway.api_execution_arn}/*"
 }

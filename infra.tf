@@ -14,6 +14,35 @@ module "dynamodb" {
   trigger_lambda_arn = ""
 }
 
+
+###############################################################################
+# OIDC Provider for GitHub Actions
+###############################################################################
+
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  # GitHub's OIDC thumbprint — stable, does not need to change.
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
+
+
+###############################################################################
+# Module: Lambda artifacts and deployment infrastructure
+###############################################################################
+module "lambda_artifacts" {
+  source = "./infra/lambda_artifacts"
+
+  artifacts_bucket_name    = "omnistream-lambda-artifacts-123456" # Must be globally unique.
+  github_functions_repo    = var.github_functions_repo
+  github_oidc_provider_arn = aws_iam_openid_connect_provider.github.arn
+
+  tags = var.tags
+}
+
+
 ###############################################################################
 # Module: Authentication
 ###############################################################################
@@ -34,10 +63,10 @@ module "cognito" {
   lambda_post_confirmation_name = module.register_user.post_confirmation_lambda_name
 }
 
+
 ###############################################################################
 # Module: Gateway
 ###############################################################################
-
 
 module "api_gateway" {
   source = "./infra/gateway"
@@ -51,6 +80,7 @@ module "api_gateway" {
   cors_allowed_headers        = ["Authorization", "Content-Type"]
 }
 
+
 ###############################################################################
 # Module: Cloudfront + S3 for Web Hosting
 ###############################################################################
@@ -60,7 +90,7 @@ module "web_hosting" {
 
   app_bucket_name = "omnistream-app-bucket-123456" # Must be globally unique.
 
-  github_repo = var.github_repo
-  github_org  = var.github_org
-  tags        = var.tags
+  github_frontend_repo     = var.github_frontend_repo
+  github_oidc_provider_arn = aws_iam_openid_connect_provider.github.arn
+  tags                     = var.tags
 }

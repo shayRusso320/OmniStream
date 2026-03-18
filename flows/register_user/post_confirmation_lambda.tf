@@ -1,32 +1,7 @@
 ###############################################################################
-# IAM Role for Post Confirmation Lambda
+# IAM Policy for DynamoDB Access
 ###############################################################################
 
-data "aws_iam_policy_document" "lambda_assume_role" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "post_confirmation_lambda" {
-  name               = "post-confirmation-lambda-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-  tags               = var.tags
-}
-
-# Basic execution — allows writing CloudWatch logs.
-resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  role       = aws_iam_role.post_confirmation_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-# Allow Lambda to write items into the DynamoDB table.
 data "aws_iam_policy_document" "lambda_dynamodb" {
   statement {
     effect = "Allow"
@@ -41,43 +16,36 @@ data "aws_iam_policy_document" "lambda_dynamodb" {
   }
 }
 
-resource "aws_iam_role_policy" "lambda_dynamodb" {
-  name   = "post-confirmation-dynamodb-policy"
-  role   = aws_iam_role.post_confirmation_lambda.id
-  policy = data.aws_iam_policy_document.lambda_dynamodb.json
-}
-
-
 ###############################################################################
 # Post Confirmation Lambda
 ###############################################################################
 
-# Package the Lambda from local handler
-data "archive_file" "lambda_zip" {
-  type        = "zip"
-  source_file = "${path.module}/index.py"
-  output_path = "${path.module}/lambda.zip"
+locals {
+  lambda_name = "cognito-post-confirmation"
 }
 
-resource "aws_lambda_function" "post_confirmation" {
-  function_name    = "cognito-post-confirmation"
-  role             = aws_iam_role.post_confirmation_lambda.arn
-  runtime          = "python3.12"
-  handler          = "index.handler"
-  filename         = data.archive_file.lambda_zip.output_path
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+module "post_confirmation_lambda" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 7.0"
 
-  # Free tier: 128 MB memory, up to 1M invocations/month free.
-  memory_size = 128
-  timeout     = 10
+  function_name = local.lambda_name
+  handler       = "index.handler"
+  runtime       = "python3.12"
 
-  environment {
-    variables = {
-      DYNAMODB_TABLE = var.table_name
-    }
+  create_package          = false
+  ignore_source_code_hash = true
+
+  s3_existing_package = {
+    bucket = var.artifacts_bucket_name
+    key    = var.artifact_key
   }
 
-  tags = merge(var.tags, { Name = "cognito-post-confirmation" })
+  environment_variables = {
+    DYNAMODB_TABLE = var.table_name
+  }
 
-  depends_on = [data.archive_file.lambda_zip]
+  attach_policy_json = true
+  policy_json        = data.aws_iam_policy_document.lambda_dynamodb.json
+
+  tags = merge(var.tags, { Name = local.lambda_name })
 }

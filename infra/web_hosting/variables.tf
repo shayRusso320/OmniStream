@@ -12,7 +12,7 @@ variable "app_bucket_name" {
 variable "cloudfront_price_class" {
   description = "CloudFront price class to use. PriceClass_100 is the cheapest option."
   type        = string
-  default = "PriceClass_100"  # US/EU only — cheapest option.
+  default     = "PriceClass_100" # US/EU only — cheapest option.
 }
 
 variable "cloudfront_default_root_object" {
@@ -21,12 +21,12 @@ variable "cloudfront_default_root_object" {
   default     = "index.html"
 }
 
-variable "github_repo" {
+variable "github_frontend_repo" {
   description = "GitHub repo in org/repo format, e.g. myorg/my-frontend."
   type        = string
 }
 
-variable "github_org" {
-  description = "GitHub repo in org/repo format, e.g. myorg/my-frontend."
+variable "github_oidc_provider_arn" {
+  description = "ARN of the GitHub OIDC provider in AWS IAM."
   type        = string
 }

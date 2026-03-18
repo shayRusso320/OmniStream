@@ -1,18 +1,3 @@
-variable "api_gateway_id" {
-  description = "ID of the HTTP API Gateway."
-  type        = string
-}
-
-variable "api_gateway_execution_arn" {
-  description = "Execution ARN of the HTTP API Gateway — used for Lambda permission."
-  type        = string
-}
-
-variable "cognito_jwt_authorizer_id" {
-  description = "ID of the Cognito JWT authorizer."
-  type        = string
-}
-
 variable "dynamodb_table_name" {
   description = "Name of the DynamoDB table."
   type        = string
@@ -44,6 +29,16 @@ variable "qdrant_collection" {
   description = "Qdrant collection name for topic vectors."
   type        = string
   default     = "topics"
+}
+
+variable "artifacts_bucket_name" {
+  description = "Name of the S3 bucket that holds Lambda artifacts."
+  type        = string
+}
+
+variable "artifact_key" {
+  description = "Key of the Lambda artifact in S3."
+  type        = string
 }
 
 variable "tags" {

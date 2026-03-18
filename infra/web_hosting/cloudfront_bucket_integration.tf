@@ -15,8 +15,8 @@ resource "aws_cloudfront_origin_access_control" "app" {
 
 data "aws_iam_policy_document" "app_bucket_policy" {
   statement {
-    effect    = "Allow"
-    actions   = ["s3:GetObject"]
+    effect  = "Allow"
+    actions = ["s3:GetObject"]
     resources = [
       "${aws_s3_bucket.app.arn}",
       "${aws_s3_bucket.app.arn}/*"

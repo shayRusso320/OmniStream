@@ -1,9 +1,9 @@
 output "post_confirmation_lambda_arn" {
   description = "ARN of the post confirmation Lambda function."
-  value       = aws_lambda_function.post_confirmation.arn
+  value       = module.post_confirmation_lambda.lambda_function_arn
 }
 
 output "post_confirmation_lambda_name" {
   description = "Name of the post confirmation Lambda function."
-  value       = aws_lambda_function.post_confirmation.function_name
+  value       = module.post_confirmation_lambda.lambda_function_name
 }

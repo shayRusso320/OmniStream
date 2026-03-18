@@ -28,15 +28,15 @@ resource "aws_cloudfront_distribution" "app" {
 
   # SPA fallback — all unknown paths return index.html so React Router works.
   custom_error_response {
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
+    error_code         = 403
+    response_code      = 200
+    response_page_path = "/${var.cloudfront_default_root_object}"
   }
 
   custom_error_response {
-    error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
+    error_code         = 404
+    response_code      = 200
+    response_page_path = "/${var.cloudfront_default_root_object}"
   }
 
   restrictions {

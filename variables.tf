@@ -58,12 +58,13 @@ variable "qdrant_api_key" {
 }
 
 ################### WEB HOSTING VARIABLES ###################
-variable "github_repo" {
-  description = "Github repo containing frontend, including github action for CD."
+variable "github_frontend_repo" {
+  description = "GitHub repo containing frontend, including github action for CD."
   type        = string
 }
 
-variable "github_org" {
-  description = "GitHub repo in org/repo format, e.g. myorg/my-frontend."
+################### LAMBDA ARTIFACTS VARIABLES ###################
+variable "github_functions_repo" {
+  description = "GitHub repo for Lambda functions in org/repo format e.g. myuser/omnistream-functions."
   type        = string
 }

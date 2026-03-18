@@ -20,9 +20,9 @@ variable "app_client_name" {
 variable "cognito_domain" {
   description = "Domain prefix for the Cognito Hosted UI. Must be unique across all Cognito user pools in the region."
   type        = string
-} 
+}
 
-variable "google_client_id"     {
+variable "google_client_id" {
   description = "Google OAuth2 client ID."
   sensitive   = true
 }
@@ -32,13 +32,13 @@ variable "google_client_secret" {
   sensitive   = true
 }
 
-variable "callback_urls"        {
+variable "callback_urls" {
   description = "List of allowed callback URLs."
   type        = list(string)
   default     = ["http://localhost:3000/callback"]
 }
 
-variable "logout_urls"          {
+variable "logout_urls" {
   description = "List of allowed logout URLs."
   type        = list(string)
   default     = ["http://localhost:3000"]
