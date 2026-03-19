@@ -24,8 +24,8 @@ module "api_gateway" {
   source  = "terraform-aws-modules/apigateway-v2/aws"
   version = "~> 5.0"
 
-  name          = var.api_name
-  protocol_type = "HTTP"
+  name               = var.api_name
+  protocol_type      = "HTTP"
   create_domain_name = false
 
   cors_configuration = {
@@ -69,13 +69,15 @@ module "api_gateway" {
 
   # Routes & Integration(s)
   routes = {
-    for key, lambda in var.lambda_integrations : lambda.route_key => {
+    for key, lambda in var.lambda_routes : lambda.route_key => {
+      authorization_type = "JWT"
+      authorizer_key     = "cognito_jwt"
+
       integration = {
         type                   = "AWS_PROXY"
         uri                    = lambda.invoke_arn
         payload_format_version = "2.0"
       }
-      authorizer_key = "cognito_jwt"
     }
   }
 
@@ -87,7 +89,7 @@ module "api_gateway" {
 ###############################################################################
 
 resource "aws_lambda_permission" "apigw_invoke" {
-  for_each = var.lambda_integrations
+  for_each = var.lambda_routes
 
   statement_id  = "AllowAPIGWInvoke${replace(each.key, "-", "")}"
   action        = "lambda:InvokeFunction"

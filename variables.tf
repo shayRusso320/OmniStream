@@ -27,18 +27,6 @@ variable "google_client_secret" {
   sensitive   = true
 }
 
-variable "callback_urls" {
-  description = "List of allowed callback URLs."
-  type        = list(string)
-  default     = ["http://localhost:3000/callback"]
-}
-
-variable "logout_urls" {
-  description = "List of allowed logout URLs."
-  type        = list(string)
-  default     = ["http://localhost:3000"]
-}
-
 ##################### EXTERNAL API VARIABLES ###################
 variable "openai_api_key" {
   description = "OpenAI API key for embedding model."

@@ -56,8 +56,8 @@ module "cognito" {
   cognito_domain       = "omni-stream-auth"
   google_client_id     = var.google_client_id
   google_client_secret = var.google_client_secret
-  callback_urls        = var.callback_urls
-  logout_urls          = var.logout_urls
+  callback_urls        = [module.web_hosting.cloudfront_url]
+  logout_urls          = [module.web_hosting.cloudfront_url]
 
   lambda_post_confirmation_arn  = module.register_user.post_confirmation_lambda_arn
   lambda_post_confirmation_name = module.register_user.post_confirmation_lambda_name
@@ -75,9 +75,17 @@ module "api_gateway" {
   api_name                    = "omnistream-api"
   cognito_user_pool_id        = module.cognito.user_pool_id
   cognito_user_pool_client_id = module.cognito.app_client_id
-  cors_allowed_origins        = ["*"] # Tighten to your domain in production.
+  cors_allowed_origins        = [module.web_hosting.cloudfront_url]
   cors_allowed_methods        = ["GET", "POST", "OPTIONS"]
   cors_allowed_headers        = ["Authorization", "Content-Type"]
+  lambda_routes = {
+    add_user_topics = {
+      route_key     = "POST /attach-topic-to-user"
+      function_name = module.add_user_topics.lambda_function_name
+      invoke_arn    = module.add_user_topics.lambda_invoke_arn
+    }
+  }
+
 }
 
 

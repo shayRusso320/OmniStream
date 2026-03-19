@@ -2,7 +2,7 @@
 
 output "cognito_hosted_ui_url" {
   description = "Cognito Hosted UI login URL."
-  value       = "https://${module.cognito.cognito_domain}.auth.${var.aws_region}.amazoncognito.com/login?client_id=${module.cognito.app_client_id}&response_type=code&scope=openid+email+profile&redirect_uri=${var.callback_urls[0]}"
+  value       = "https://${module.cognito.cognito_domain}.auth.${var.aws_region}.amazoncognito.com/login?client_id=${module.cognito.app_client_id}&response_type=code&scope=openid+email+profile&redirect_uri=${module.web_hosting.cloudfront_url}"
 }
 
 output "user_pool_id" {
@@ -36,7 +36,7 @@ output "s3_bucket_name" {
   value       = module.web_hosting.s3_bucket_name
 }
 
-output "deploy_role_arn" {
+output "frontend_deploy_role_arn" {
   description = "Role ARN to set as AWS_DEPLOY_ROLE_ARN in GitHub Actions variables."
   value       = module.web_hosting.deploy_role_arn
 }
@@ -47,3 +47,13 @@ output "api_url" {
   value       = module.api_gateway.api_endpoint
 }
 
+############# Lambda Artifacts Outputs ############
+output "lambda_deploy_role_arn" {
+  description = "Role ARN to set as AWS_DEPLOY_ROLE_ARN in GitHub Actions variables."
+  value       = module.lambda_artifacts.functions_deploy_role_arn
+}
+
+output "artifacts_bucket_name" {
+  description = "S3 bucket name for Lambda artifacts — set as ARTIFACTS_BUCKET in GitHub Actions variables."
+  value       = module.lambda_artifacts.artifacts_bucket_name
+}

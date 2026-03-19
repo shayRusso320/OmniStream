@@ -43,8 +43,8 @@ variable "cognito_user_pool_client_id" {
 }
 
 ######################## Integration Variables ########################
-variable "lambda_integrations" {
-  description = "Map of Lambda function integrations with their routes. Key is the integration ID, value contains route_key, function_name, and invoke_arn."
+variable "lambda_routes" {
+  description = "Map of Lambda function integrations. Key is the route_key (HTTP method + path), value contains function_name and invoke_arn."
   type = map(object({
     route_key     = string
     function_name = string
