@@ -30,62 +30,7 @@ A secondary feature monitors Telegram continuously for signs of an imminent atta
 
 The system is split across two environments: a lightweight **local agent** running on a personal computer in Israel, and a fully **event-driven AWS cloud pipeline**.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  YOUR COMPUTER  (Israeli IP required)                           │
-│                                                                 │
-│  Local Agent                                                    │
-│  ├── Polls tzevaadom API every 2–3 seconds                      │
-│  ├── Deduplicates via SQLite                                    │
-│  └── POSTs new alarms to AWS API Gateway                        │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ HTTPS POST
-                           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  AWS CLOUD                                                      │
-│                                                                 │
-│  API Gateway ──► SQS: alarm_events ──► Pipeline Processor λ    │
-│                                              │                  │
-│                                    ┌─────────┴──────────┐      │
-│                                    │  Create Threat      │      │
-│                                    │  Create Alarm       │      │
-│                                    │  Upsert → Qdrant    │      │
-│                                    │  Write → Redis TTL  │      │
-│                                    └────────────────────-┘      │
-│                                                                 │
-│  ECS Fargate (always on) ──────────────────────────────────-   │
-│  Telethon fetches Telegram 24/7                                 │
-│  └──► SQS: raw_messages ──► Filter λ (capped concurrency)      │
-│                                    │                            │
-│                          Gate 2: Content similarity             │
-│                          (OpenAI embeddings, 3 concepts)        │
-│                                    │                            │
-│                          Gate 3: Location match                 │
-│                          (Qdrant vector search)                 │
-│                                    │                            │
-│                    ┌───────────────┴────────────────┐          │
-│                    │ Match found   │  No match       │          │
-│                    │               │                 │          │
-│              Attach to         LLM eval             │          │
-│            existing threat    (GPT-4o)              │          │
-│                    │          confident?             │          │
-│                    │          ├── no  → discard      │          │
-│                    │          └── yes → new threat   │          │
-│                    │                                 │          │
-│                    └──────────┬──────────────────────┘          │
-│                               │                                 │
-│                        Write survivor → RDS                     │
-│                               │                                 │
-│                        Summarizer λ (async)                     │
-│                        ├── Acquire Redis lock                   │
-│                        ├── Read all survivors from RDS          │
-│                        ├── GPT-4o regenerates summary           │
-│                        └── Write → Redis cache                  │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
+---- FILL IN DIAGRAM -------
 
 ## The Two Flows
 
